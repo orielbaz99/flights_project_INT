@@ -326,8 +326,8 @@ def create_ticket():
             return 'bad input', 400
         conn = sqlite3.connect(route)
         conn.execute(f"INSERT INTO Tickets (user_id, flight_id) VALUES ({ticket['user_id']}, {ticket['flight_id']})")
-        seats = conn.execute(f'Select remaining_seats from Flights where flight_id = {ticket["flight_id"]}')
-        conn.execute(f'UPDATE Flights set remaining_seats = {seats - 1} WHERE flight_id = {ticket["flight_id"]}') # Could not execute
+        # seats = conn.execute(f'Select remaining_seats from Flights where flight_id = {ticket["flight_id"]}')
+        # conn.execute( f'UPDATE Flights set remaining_seats = {seats - 1} WHERE flight_id = {ticket["flight_id"]}')  # Could not execute
         conn.commit()
         conn.close()
         logging.debug('Posted new ticket')
@@ -348,8 +348,8 @@ def delete_ticket_by_id(id):
         ticket = request.get_json()
         conn = sqlite3.connect(route)
         x = conn.execute(f"DELETE FROM Tickets WHERE ticket_id ={id}")
-        seats = conn.execute(f'Select remaining_seats from Flights where flight_id = {ticket["flight_id"]}')
-        conn.execute(f'UPDATE Flights set remaining_seats ={seats + 1} WHERE flight_id = {ticket["flight_id"]}') # Could not execute
+        # seats = conn.execute(f'Select remaining_seats from Flights where flight_id = {ticket["flight_id"]}')
+        # conn.execute( f'UPDATE Flights set remaining_seats ={seats + 1} WHERE flight_id = {ticket["flight_id"]}')  # Could not execute
         conn.commit()
         conn.close()
         logging.debug(f"ticket {id} deleted")
