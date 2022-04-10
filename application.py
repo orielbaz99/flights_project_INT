@@ -253,11 +253,11 @@ def update_flight(id):
                 update_statement += f",remaining_seats = {update_flight.get('remaining_seats')}"  # note the comma
             else:
                 update_statement = f"remaining_seats = {update_flight.get('remaining_seats')}"
-        if update_user.get('dest_country_id'):
+        if update_flight.get('dest_country_id'):
             if update_statement != "":
-                update_statement += f",dest_country_id = {update_user.get('dest_country_id')}"  # note the comma
+                update_statement += f",dest_country_id = {update_flight.get('dest_country_id')}"  # note the comma
             else:
-                update_statement = f"dest_country_id = {update_user.get('dest_country_id')}"
+                update_statement = f"dest_country_id = {update_flight.get('dest_country_id')}"
         if update_flight != None:
             conn = sqlite3.connect(route)
             conn.execute(f"UPDATE Flights SET {update_statement} WHERE flight_id = {id}")
@@ -267,6 +267,7 @@ def update_flight(id):
         return f"Flight {id} info updated"
     except Exception:
         return f"Could not update flight {id}"
+
 
 
 @app.route('/flights/<int:id>', methods=['DELETE'])
