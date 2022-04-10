@@ -210,7 +210,7 @@ def get_flight_by_id(id):
             flight = {'flight_id': i[0], 'remaining_seats': i[1], 'origin_country_id': i[2], 'dest_country_id': i[3],
                       'timestamp': i[4]}
         conn.close()
-        logging.debug(f'Getting user {id} by ID')
+        logging.debug(f'Getting flight {id} by ID')
         return flight
     except Exception:
         return f'Flight not found', 404
@@ -269,7 +269,6 @@ def update_flight(id):
         return f"Could not update flight {id}"
 
 
-
 @app.route('/flights/<int:id>', methods=['DELETE'])
 def delete_flight_by_id(id):
     try:
@@ -326,10 +325,9 @@ def create_ticket():
         if not validate_ticket_post(ticket):
             return 'bad input', 400
         conn = sqlite3.connect(route)
-        conn.execute(
-            f"INSERT INTO Tickets (user_id, flight_id) VALUES (\"{ticket['user_id']}\",\"{ticket['flight_id']}\"")
+        conn.execute(f"INSERT INTO Tickets (user_id, flight_id) VALUES ({ticket['user_id']}, {ticket['flight_id']})")
         seats = conn.execute(f'Select remaining_seats from Flights where flight_id = {ticket["flight_id"]}')
-        conn.execute(f'UPDATE Flights set remaining_seats ={seats - 1} WHERE flight_id = {ticket["flight_id"]}')
+        conn.execute(f'UPDATE Flights set remaining_seats = {seats - 1} WHERE flight_id = {ticket["flight_id"]}') # Could not execute
         conn.commit()
         conn.close()
         logging.debug('Posted new ticket')
@@ -351,7 +349,7 @@ def delete_ticket_by_id(id):
         conn = sqlite3.connect(route)
         x = conn.execute(f"DELETE FROM Tickets WHERE ticket_id ={id}")
         seats = conn.execute(f'Select remaining_seats from Flights where flight_id = {ticket["flight_id"]}')
-        conn.execute(f'UPDATE Flights set remaining_seats ={seats + 1} WHERE flight_id = {ticket["flight_id"]}')
+        conn.execute(f'UPDATE Flights set remaining_seats ={seats + 1} WHERE flight_id = {ticket["flight_id"]}') # Could not execute
         conn.commit()
         conn.close()
         logging.debug(f"ticket {id} deleted")
