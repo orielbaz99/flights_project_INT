@@ -10,7 +10,7 @@ app = Flask(__name__)
 route = r"C:\Users\97254\Desktop\Devops\flightsDB.db"
 
 logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s: - > %(levelname)s - > %(message)s'),  # filename='main.log')
+                    format='%(asctime)s: - > %(levelname)s - > %(message)s', filename='main.log')
 
 
 @app.route('/')
@@ -71,13 +71,6 @@ def main_page():
             return 'hello'
     conn.close()
 
-    # return render_template('main_page.html', name= user.get("full_name"))
-
-
-@app.route('/buy', methods=['GET', 'POST'])  # rest_client buy tickets
-def buy_page():
-    return render_template('buy.html')
-
 
 # *  *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *
 # *  *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *
@@ -114,24 +107,10 @@ def get_user_by_id(id):
         return f'User not found', 404
 
 
-@app.route('/users/<int:name>')
-def hello_user(name):
-    try:
-        conn = sqlite3.connect(route)
-        x = conn.execute(f"SELECT * FROM Users WHERE full_name ={name}")
-        for i in x:
-            user = {'id_AI': i[0], 'full_name': i[1], 'password': i[2], 'real_id': i[3]}
-        conn.close()
-        logging.debug(f'Getting user by name')
-        return user.get('full_name')
-    except Exception:
-        return f'User not found', 404
-
-
 @app.route('/users', methods=['POST'])
 def create_user():
     try:
-        user = request.get_json()
+        user = request.get_json()  # POSTMAN
         if not validate_user_post(user):
             return 'bad input', 400
         conn = sqlite3.connect(route)
@@ -142,7 +121,7 @@ def create_user():
         logging.debug('Posted new user')
         return 'Posted new user'
     except:
-        user = request.form.to_dict()
+        user = request.form.to_dict()  # SIGN UP FORM
         if not validate_user_post(user):
             return 'bad input', 400
         conn = sqlite3.connect(route)
@@ -276,9 +255,9 @@ def update_flight(id):
                 update_statement = f"remaining_seats = {update_flight.get('remaining_seats')}"
         if update_user.get('dest_country_id'):
             if update_statement != "":
-                update_statement += f",dest_country_id = \"{update_user.get('dest_country_id')}\""  # note the comma
+                update_statement += f",dest_country_id = {update_user.get('dest_country_id')}"  # note the comma
             else:
-                update_statement = f"dest_country_id = \"{update_user.get('dest_country_id')}\""
+                update_statement = f"dest_country_id = {update_user.get('dest_country_id')}"
         if update_flight != None:
             conn = sqlite3.connect(route)
             conn.execute(f"UPDATE Flights SET {update_statement} WHERE flight_id = {id}")
@@ -342,13 +321,12 @@ def get_ticket_by_id(id):
 @app.route('/tickets', methods=['POST'])
 def create_ticket():
     try:
-        ticket = request.form.to_dict()
-        print(ticket)
+        ticket = request.get_json()
         if not validate_ticket_post(ticket):
             return 'bad input', 400
         conn = sqlite3.connect(route)
-        conn.execute(f"INSERT INTO Tickets (user_id, flight_id, real_id) \
-        VALUES ({ticket['user_id']},{ticket['flight_id']},{ticket['real_id']})")
+        conn.execute(
+            f"INSERT INTO Tickets (user_id, flight_id) VALUES (\"{ticket['user_id']}\",\"{ticket['flight_id']}\"")
         seats = conn.execute(f'Select remaining_seats from Flights where flight_id = {ticket["flight_id"]}')
         conn.execute(f'UPDATE Flights set remaining_seats ={seats - 1} WHERE flight_id = {ticket["flight_id"]}')
         conn.commit()
@@ -356,12 +334,11 @@ def create_ticket():
         logging.debug('Posted new ticket')
         return json.dumps(ticket)
     except Exception:
-        print("hello")
         return f"Could not post ticket"
 
 
 def validate_ticket_post(ticket_input):
-    if ticket_input.get('user_id') and ticket_input.get('flight_id') and ticket_input.get('real_id'):
+    if ticket_input.get('user_id') and ticket_input.get('flight_id'):
         return True
     return False
 
@@ -369,8 +346,11 @@ def validate_ticket_post(ticket_input):
 @app.route('/tickets/<int:id>', methods=['DELETE'])
 def delete_ticket_by_id(id):
     try:
+        ticket = request.get_json()
         conn = sqlite3.connect(route)
         x = conn.execute(f"DELETE FROM Tickets WHERE ticket_id ={id}")
+        seats = conn.execute(f'Select remaining_seats from Flights where flight_id = {ticket["flight_id"]}')
+        conn.execute(f'UPDATE Flights set remaining_seats ={seats + 1} WHERE flight_id = {ticket["flight_id"]}')
         conn.commit()
         conn.close()
         logging.debug(f"ticket {id} deleted")
@@ -436,28 +416,6 @@ def validate_country_post(country_input):
     if country_input.get('name'):
         return True
     return False
-
-
-@app.route('/countries/<int:id>', methods=['PUT'])
-def update_country(id):
-    try:
-        update_country = request.get_json()
-        update_statement = ''
-
-        if update_country.get('name'):
-            if update_statement != "":
-                update_statement += f",name = \"{update_country.get('name')}\""  # note the comma
-            else:
-                update_statement = f"name = \"{update_country.get('name')}\""
-        if update_country != None:
-            conn = sqlite3.connect(route)
-            conn.execute(f"UPDATE Countries SET {update_statement} WHERE code_AI = {id}")
-            conn.commit()
-            conn.close()
-        logging.debug(f"Country {id} info updated")
-        return f"country {id} info updated"
-    except Exception:
-        return f"Could not update country {id} info"
 
 
 @app.route('/countries/<int:id>', methods=['DELETE'])
