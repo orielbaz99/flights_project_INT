@@ -130,7 +130,7 @@ def create_user():
         conn.commit()
         conn.close()
         logging.debug('Posted new user')
-        return redirect('main')
+        return 'Posted new user'
     else:
         return 'Could not post user'
         logging.debug(f"Could not post user")
